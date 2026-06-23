@@ -5,14 +5,11 @@
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <UseWinUI>true</UseWinUI>
-    <UseWPF>false</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <Platforms>x64</Platforms>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <RootNamespace>VoiceInput</RootNamespace>
