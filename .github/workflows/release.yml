@@ -27,7 +27,11 @@ jobs:
 
       - name: Publish
         if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
         run: |
+          $sdkPath = & dotnet --list-sdk | Where-Object { $_ -match '8\.0\.' } | Select-Object -First 1 | ForEach-Object { $_.Split()[0] }
+          $ridGraph = Join-Path $env:DOTNET_ROOT "sdk" $sdkPath "RuntimeIdentifierGraph.json"
+          $env:DOTNET_RUNTIME_IDENTIFIER_GRAPH_PATH = $ridGraph
           dotnet publish src/VoiceInput/VoiceInput.csproj `
             -c Release `
             -r win-x64 `
@@ -35,19 +39,19 @@ jobs:
             -p:PublishSingleFile=true `
             -p:IncludeNativeLibrariesForSelfExtract=true `
             -o ./publish
-        env:
-          DOTNET_ROLL_FORWARD_TO_PRERELEASE: 0
 
       - name: Build verification
         if: "!startsWith(github.ref, 'refs/tags/v')"
+        shell: pwsh
         run: |
+          $sdkPath = & dotnet --list-sdk | Where-Object { $_ -match '8\.0\.' } | Select-Object -First 1 | ForEach-Object { $_.Split()[0] }
+          $ridGraph = Join-Path $env:DOTNET_ROOT "sdk" $sdkPath "RuntimeIdentifierGraph.json"
+          $env:DOTNET_RUNTIME_IDENTIFIER_GRAPH_PATH = $ridGraph
           dotnet publish src/VoiceInput/VoiceInput.csproj `
             -c Release `
             -r win-x64 `
             --self-contained true `
             -o ./build-verify
-        env:
-          DOTNET_ROLL_FORWARD_TO_PRERELEASE: 0
 
       - name: Package portable zip
         if: startsWith(github.ref, 'refs/tags/v')
