@@ -25,11 +25,4 @@
     <PackageReference Include="System.Speech" Version="8.0.0" />
   </ItemGroup>
 
-  <!-- Suppress NETSDK1083: win10-* RIDs registered by WindowsAppSDK are not valid in .NET 8 -->
-  <Target Name="SuppressNetSdk1083" BeforeTargets="ResolveFrameworkReferences">
-    <PropertyGroup>
-      <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-    </PropertyGroup>
-  </Target>
-
 </Project>
