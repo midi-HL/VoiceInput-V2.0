@@ -20,7 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.250108004" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.250106002" />
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="System.Speech" Version="8.0.0" />
   </ItemGroup>
