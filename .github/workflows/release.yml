@@ -28,7 +28,7 @@ jobs:
       - name: Publish
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          dotnet publish src/VoiceInput/VoiceInput.csproj `
+          dotnet publish src/VoiceInput `
             -c Release `
             -r win-x64 `
             --self-contained true `
@@ -39,7 +39,7 @@ jobs:
       - name: Build verification
         if: "!startsWith(github.ref, 'refs/tags/v')"
         run: |
-          dotnet publish src/VoiceInput/VoiceInput.csproj `
+          dotnet publish src/VoiceInput `
             -c Release `
             -r win-x64 `
             --self-contained true `
