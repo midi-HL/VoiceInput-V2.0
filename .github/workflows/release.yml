@@ -21,6 +21,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Remove .NET 10 runtime
+        continue-on-error: true
         shell: pwsh
         run: |
           dotnet --list-runtimes | Where-Object { $_ -match '10\.0\.' } | ForEach-Object {
