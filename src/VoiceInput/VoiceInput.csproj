@@ -2,8 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <TargetPlatformVersion>10.0.19041.0</TargetPlatformVersion>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <UseWinUI>true</UseWinUI>
     <UseWindowsForms>true</UseWindowsForms>
@@ -25,5 +24,12 @@
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="System.Speech" Version="8.0.0" />
   </ItemGroup>
+
+  <!-- Suppress NETSDK1083: win10-* RIDs registered by WindowsAppSDK are not valid in .NET 8 -->
+  <Target Name="SuppressNetSdk1083" BeforeTargets="ResolveFrameworkReferences">
+    <PropertyGroup>
+      <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    </PropertyGroup>
+  </Target>
 
 </Project>
