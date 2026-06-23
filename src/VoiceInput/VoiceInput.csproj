@@ -13,6 +13,7 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <WindowsSdkPackageVersion>10.0.19041.38</WindowsSdkPackageVersion>
     <RootNamespace>VoiceInput</RootNamespace>
     <AssemblyName>VoiceInput</AssemblyName>
     <Version>1.0.0</Version>
