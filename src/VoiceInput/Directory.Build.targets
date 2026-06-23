@@ -1,0 +1,8 @@
+<Project>
+  <!-- Override RID graph to include win10-* RIDs that WindowsAppSDK registers -->
+  <Target Name="OverrideRuntimeIdentifierGraph" BeforeTargets="ResolveFrameworkReferences">
+    <CreateProperty Value="win-x64">
+      <Output TaskParameter="Value" PropertyName="RuntimeIdentifiers" />
+    </CreateProperty>
+  </Target>
+</Project>
