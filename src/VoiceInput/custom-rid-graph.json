@@ -1,0 +1,42 @@
+{
+  "win-x64": {
+    "#import": [ "win", "any" ]
+  },
+  "win-x86": {
+    "#import": [ "win", "any" ]
+  },
+  "win-arm": {
+    "#import": [ "win", "any" ]
+  },
+  "win-arm64": {
+    "#import": [ "win", "any" ]
+  },
+  "win10-x64": {
+    "#import": [ "win-x64" ]
+  },
+  "win10-x86": {
+    "#import": [ "win-x86" ]
+  },
+  "win10-arm": {
+    "#import": [ "win-arm" ]
+  },
+  "win10-arm64": {
+    "#import": [ "win-arm64" ]
+  },
+  "win10-x64-aot": {
+    "#import": [ "win10-x64" ]
+  },
+  "win10-x86-aot": {
+    "#import": [ "win10-x86" ]
+  },
+  "win10-arm-aot": {
+    "#import": [ "win10-arm" ]
+  },
+  "win10-arm64-aot": {
+    "#import": [ "win10-arm64" ]
+  },
+  "win": {
+    "#import": [ "any" ]
+  },
+  "any": {}
+}
