@@ -25,23 +25,8 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Set .NET 8 SDK RID graph
-        shell: pwsh
-        run: |
-          $sdkVersion = (dotnet --list-sdk | Where-Object { $_ -match '8\.0\.' } | Select-Object -First 1) -replace '\s.*',''
-          $ridGraphPath = Join-Path $env:DOTNET_ROOT "sdk" $sdkVersion "RuntimeIdentifierGraph.json"
-          if (Test-Path $ridGraphPath) {
-            echo "DOTNET_RUNTIME_IDENTIFIER_GRAPH_PATH=$ridGraphPath" >> $env:GITHUB_ENV
-            Write-Host "Using RID graph: $ridGraphPath"
-          } else {
-            Write-Host "RID graph not found at $ridGraphPath"
-            # Try alternative path
-            $altPath = Join-Path $env:DOTNET_ROOT "sdk" $sdkVersion "Sdks" "Microsoft.NET.Sdk" "targets" "RuntimeIdentifierGraph.json"
-            if (Test-Path $altPath) {
-              echo "DOTNET_RUNTIME_IDENTIFIER_GRAPH_PATH=$altPath" >> $env:GITHUB_ENV
-              Write-Host "Using alternative RID graph: $altPath"
-            }
-          }
+      - name: Restore
+        run: dotnet restore src/VoiceInput -r win-x64
 
       - name: Publish
         if: startsWith(github.ref, 'refs/tags/v')
@@ -50,6 +35,7 @@ jobs:
             -c Release `
             -r win-x64 `
             --self-contained true `
+            --no-restore `
             -p:PublishSingleFile=true `
             -p:IncludeNativeLibrariesForSelfExtract=true `
             -o ./publish
@@ -61,6 +47,7 @@ jobs:
             -c Release `
             -r win-x64 `
             --self-contained true `
+            --no-restore `
             -o ./build-verify
 
       - name: Package portable zip
