@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
 namespace VoiceInput
 {
@@ -15,11 +14,35 @@ namespace VoiceInput
         [DllImport("user32.dll")]
         private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
 
+        [DllImport("user32.dll")]
+        private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+        [DllImport("user32.dll")]
+        private static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MonitorEnumDelegate lpfnEnum, IntPtr dwData);
+
         [StructLayout(LayoutKind.Sequential)]
         private struct POINT
         {
             public int X;
             public int Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MONITORINFO
+        {
+            public int cbSize;
+            public RECT rcMonitor;
+            public RECT rcWork;
+            public uint dwFlags;
         }
 
         private enum MonitorDpiType
@@ -58,14 +81,21 @@ namespace VoiceInput
             return 1.0;
         }
 
-        public static Screen GetScreenForPoint(int x, int y)
+        public static (int left, int top, int width, int height) GetWorkingAreaForPoint(int x, int y)
         {
-            foreach (var screen in Screen.AllScreens)
+            POINT pt = new POINT { X = x, Y = y };
+            IntPtr monitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+            return GetMonitorWorkingArea(monitor);
+        }
+
+        private static (int left, int top, int width, int height) GetMonitorWorkingArea(IntPtr monitor)
+        {
+            var mi = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+            if (GetMonitorInfo(monitor, ref mi))
             {
-                if (screen.WorkingArea.Contains(x, y))
-                    return screen;
+                return (mi.rcWork.Left, mi.rcWork.Top, mi.rcWork.Right - mi.rcWork.Left, mi.rcWork.Bottom - mi.rcWork.Top);
             }
-            return Screen.PrimaryScreen ?? Screen.AllScreens[0];
+            return (0, 0, 1920, 1080); // Fallback
         }
     }
 }

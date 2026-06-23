@@ -278,19 +278,19 @@ namespace VoiceInput
                 GetCursorPos(out POINT cursorPos);
 
                 double dpiScale = DpiHelper.GetDpiScaleForPoint(cursorPos.X, cursorPos.Y);
-                var screen = DpiHelper.GetScreenForPoint(cursorPos.X, cursorPos.Y);
+                var (screenLeft, screenTop, screenWidth, screenHeight) = DpiHelper.GetWorkingAreaForPoint(cursorPos.X, cursorPos.Y);
 
-                double screenWidth = screen.WorkingArea.Width / dpiScale;
-                double screenHeight = screen.WorkingArea.Height / dpiScale;
-                double screenLeft = screen.WorkingArea.Left / dpiScale;
-                double screenTop = screen.WorkingArea.Top / dpiScale;
+                double logicalWidth = screenWidth / dpiScale;
+                double logicalHeight = screenHeight / dpiScale;
+                double logicalLeft = screenLeft / dpiScale;
+                double logicalTop = screenTop / dpiScale;
 
                 double hudWidth = 200;
                 double hudHeight = 40;
                 double offsetY = Settings.HudOffsetY;
 
-                double x = screenLeft + (screenWidth - hudWidth) / 2;
-                double y = screenTop + screenHeight - hudHeight - offsetY;
+                double x = logicalLeft + (logicalWidth - hudWidth) / 2;
+                double y = logicalTop + logicalHeight - hudHeight - offsetY;
 
                 this.AppWindow.MoveAndResize(new RectInt32(
                     (int)(x * dpiScale),

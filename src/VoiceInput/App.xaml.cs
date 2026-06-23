@@ -77,7 +77,7 @@ namespace VoiceInput
                 else
                     _keyboardHook?.Uninstall();
             };
-            _trayIcon.Initialize();
+            _trayIcon.InitializeWithInstance();
         }
 
         private void InitializeKeyboardHook()

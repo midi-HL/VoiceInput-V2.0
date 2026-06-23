@@ -31,6 +31,9 @@ namespace VoiceInput
         [DllImport("user32.dll")]
         private static extern IntPtr GetClipboardData(uint uFormat);
 
+        [DllImport("user32.dll")]
+        private static extern bool IsClipboardFormatAvailable(uint format);
+
         [DllImport("kernel32.dll")]
         private static extern IntPtr GlobalAlloc(uint uFlags, UIntPtr dwBytes);
 
@@ -42,6 +45,9 @@ namespace VoiceInput
 
         [DllImport("kernel32.dll")]
         private static extern UIntPtr GlobalSize(IntPtr hMem);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern int MessageBox(IntPtr hWnd, string text, string caption, uint type);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct INPUT
@@ -69,7 +75,6 @@ namespace VoiceInput
 
         private const uint INPUT_KEYBOARD = 1;
         private const uint KEYEVENTF_KEYUP = 0x0002;
-        private const uint KEYEVENTF_CTRLDOWN = 0x0000;
         private const ushort VK_CONTROL = 0x11;
         private const ushort VK_V = 0x56;
         private const uint CF_UNICODETEXT = 13;
@@ -90,8 +95,7 @@ namespace VoiceInput
                 {
                     try
                     {
-                        if (System.Windows.Forms.Clipboard.ContainsText())
-                            originalClipboardText = System.Windows.Forms.Clipboard.GetText();
+                        originalClipboardText = GetClipboardText();
                     }
                     catch { }
                 });
@@ -109,8 +113,7 @@ namespace VoiceInput
                 {
                     try
                     {
-                        System.Windows.Forms.Clipboard.SetText(text);
-                        clipboardOk = true;
+                        clipboardOk = SetClipboardText(text);
                     }
                     catch { }
                 });
@@ -122,29 +125,20 @@ namespace VoiceInput
 
             if (!clipboardOk)
             {
-                // Fallback: just notify user
-                System.Windows.Forms.MessageBox.Show(
-                    "文字已复制到剪贴板，请手动粘贴。\nText copied to clipboard, please paste manually.",
-                    "VoiceInput",
-                    System.Windows.Forms.MessageBoxButtons.OK,
-                    System.Windows.Forms.MessageBoxIcon.Information);
+                MessageBox(IntPtr.Zero, "文字已复制到剪贴板，请手动粘贴。\nText copied to clipboard, please paste manually.", "VoiceInput", 0);
                 return;
             }
 
-            // Small delay to ensure clipboard is ready
             await Task.Delay(50);
 
-            // Restore focus to foreground window
             if (foregroundHwnd != IntPtr.Zero)
             {
                 SetForegroundWindow(foregroundHwnd);
                 await Task.Delay(30);
             }
 
-            // Simulate Ctrl+V
             SimulateCtrlV();
 
-            // Wait for paste to complete, then restore clipboard
             await Task.Delay(200);
 
             // Restore original clipboard
@@ -155,9 +149,9 @@ namespace VoiceInput
                     try
                     {
                         if (originalClipboardText != null)
-                            System.Windows.Forms.Clipboard.SetText(originalClipboardText);
+                            SetClipboardText(originalClipboardText);
                         else
-                            System.Windows.Forms.Clipboard.Clear();
+                            ClearClipboard();
                     }
                     catch { }
                 });
@@ -168,24 +162,107 @@ namespace VoiceInput
             catch { }
         }
 
+        private static string? GetClipboardText()
+        {
+            if (!IsClipboardFormatAvailable(CF_UNICODETEXT))
+                return null;
+
+            if (!OpenClipboard(IntPtr.Zero))
+                return null;
+
+            try
+            {
+                IntPtr hData = GetClipboardData(CF_UNICODETEXT);
+                if (hData == IntPtr.Zero)
+                    return null;
+
+                IntPtr pData = GlobalLock(hData);
+                if (pData == IntPtr.Zero)
+                    return null;
+
+                try
+                {
+                    return Marshal.PtrToStringUni(pData);
+                }
+                finally
+                {
+                    GlobalUnlock(hData);
+                }
+            }
+            finally
+            {
+                CloseClipboard();
+            }
+        }
+
+        private static bool SetClipboardText(string text)
+        {
+            if (!OpenClipboard(IntPtr.Zero))
+                return false;
+
+            try
+            {
+                EmptyClipboard();
+
+                int bytes = (text.Length + 1) * 2; // UTF-16
+                IntPtr hMem = GlobalAlloc(GMEM_MOVEABLE, (UIntPtr)bytes);
+                if (hMem == IntPtr.Zero)
+                    return false;
+
+                IntPtr pMem = GlobalLock(hMem);
+                if (pMem == IntPtr.Zero)
+                {
+                    // GlobalFree would be needed but let's just return
+                    return false;
+                }
+
+                try
+                {
+                    Marshal.Copy(text.ToCharArray(), 0, pMem, text.Length);
+                    // Null terminator
+                    Marshal.WriteInt16(pMem + text.Length * 2, 0);
+                }
+                finally
+                {
+                    GlobalUnlock(hMem);
+                }
+
+                if (SetClipboardData(CF_UNICODETEXT, hMem) == IntPtr.Zero)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+            finally
+            {
+                CloseClipboard();
+            }
+        }
+
+        private static void ClearClipboard()
+        {
+            if (OpenClipboard(IntPtr.Zero))
+            {
+                EmptyClipboard();
+                CloseClipboard();
+            }
+        }
+
         private static void SimulateCtrlV()
         {
             INPUT[] inputs = new INPUT[4];
 
-            // Ctrl down
             inputs[0].type = INPUT_KEYBOARD;
             inputs[0].union.ki.wVk = VK_CONTROL;
 
-            // V down
             inputs[1].type = INPUT_KEYBOARD;
             inputs[1].union.ki.wVk = VK_V;
 
-            // V up
             inputs[2].type = INPUT_KEYBOARD;
             inputs[2].union.ki.wVk = VK_V;
             inputs[2].union.ki.dwFlags = KEYEVENTF_KEYUP;
 
-            // Ctrl up
             inputs[3].type = INPUT_KEYBOARD;
             inputs[3].union.ki.wVk = VK_CONTROL;
             inputs[3].union.ki.dwFlags = KEYEVENTF_KEYUP;
