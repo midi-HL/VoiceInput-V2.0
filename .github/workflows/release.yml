@@ -43,17 +43,15 @@ jobs:
       - name: Build and capture XAML errors
         shell: pwsh
         run: |
-          dotnet publish src/VoiceInput -c Release -r win-x64 --self-contained true --no-restore -o build-verify
+          dotnet publish src/VoiceInput -c Release -r win-x64 --self-contained true --no-restore -o build-verify 2>&1
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "Build failed. Checking XAML compiler output..."
-            $outputJson = "src/VoiceInput/obj/Release/net8.0-windows10.0.19041.0/win-x64/output.json"
-            if (Test-Path $outputJson) {
-              Write-Host "=== output.json ==="
-              Get-Content $outputJson | ConvertFrom-Json | ConvertTo-Json -Depth 10
+            Write-Host "`n=== Searching for XAML compiler output ==="
+            Get-ChildItem -Path src/VoiceInput/obj -Recurse -Filter "output.json" | ForEach-Object {
+              Write-Host "Found: $($_.FullName)"
+              Get-Content $_.FullName | ConvertFrom-Json | ConvertTo-Json -Depth 10
             }
-            # Also check for any MC error files
-            Get-ChildItem "src/VoiceInput/obj" -Recurse -Filter "*.err" | ForEach-Object {
-              Write-Host "=== $($_.FullName) ==="
+            Get-ChildItem -Path src/VoiceInput/obj -Recurse -Filter "*.err" | ForEach-Object {
+              Write-Host "Error file: $($_.FullName)"
               Get-Content $_.FullName
             }
             exit 1
