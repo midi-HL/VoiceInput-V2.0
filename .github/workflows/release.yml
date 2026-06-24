@@ -40,17 +40,24 @@ jobs:
           }
         continue-on-error: true
 
-      - name: Publish
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: cmd
+      - name: Build with verbose
+        if: "!startsWith(github.ref, 'refs/tags/v')"
+        shell: pwsh
         run: |
-          "C:\Program Files\dotnet\dotnet.exe" publish src\VoiceInput -c Release -r win-x64 --self-contained true --no-restore -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+          dotnet publish src/VoiceInput -c Release -r win-x64 --self-contained true --no-restore -o build-verify -v detailed 2>&1 | Select-String -Pattern "XamlCompiler|error|Error|MC[0-9]|input.json|output.json" | Select-Object -First 30
+        continue-on-error: true
 
       - name: Build verification
         if: "!startsWith(github.ref, 'refs/tags/v')"
         shell: cmd
         run: |
           "C:\Program Files\dotnet\dotnet.exe" publish src\VoiceInput -c Release -r win-x64 --self-contained true --no-restore -o build-verify
+
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: cmd
+        run: |
+          "C:\Program Files\dotnet\dotnet.exe" publish src\VoiceInput -c Release -r win-x64 --self-contained true --no-restore -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
 
       - name: Package portable zip
         if: startsWith(github.ref, 'refs/tags/v')
