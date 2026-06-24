@@ -86,6 +86,7 @@ namespace VoiceInput
         private const uint WM_COMMAND = 0x0111;
         private const uint MF_STRING = 0x00000000;
         private const uint MF_SEPARATOR = 0x00000800;
+        private const uint MF_POPUP = 0x00000010;
         private const uint TPM_RIGHTBUTTON = 0x0002;
         private const uint TPM_BOTTOMALIGN = 0x0020;
         private const uint GWL_WNDPROC = -4;
@@ -201,11 +202,12 @@ namespace VoiceInput
         }
 
         private static TrayIcon? _instance;
+        private static readonly WndProcDelegate _staticWndProc = WndProc;
 
         public void InitializeWithInstance()
         {
             _instance = this;
-            _wndProcDelegate = WndProc;
+            _wndProcDelegate = _staticWndProc;
             Initialize();
         }
 
@@ -227,14 +229,14 @@ namespace VoiceInput
             AppendMenu(langMenu, MF_STRING, MENU_ID_LANG_ZH_TW, Settings.RecognitionLanguage == RecognitionLanguage.ZhTW ? "● 繁體中文" : "  繁體中文");
             AppendMenu(langMenu, MF_STRING, MENU_ID_LANG_JA, Settings.RecognitionLanguage == RecognitionLanguage.JaJP ? "● 日本語" : "  日本語");
             AppendMenu(langMenu, MF_STRING, MENU_ID_LANG_KO, Settings.RecognitionLanguage == RecognitionLanguage.KoKR ? "● 한국어" : "  한국어");
-            AppendMenu(hMenu, 0x00000010, 0, "识别语言"); // MF_POPUP
+            AppendMenu(hMenu, MF_POPUP, 0, "识别语言"); // MF_POPUP
             AppendMenu(hMenu, MF_SEPARATOR, 0, "");
 
             // Mode submenu
             IntPtr modeMenu = CreatePopupMenu();
             AppendMenu(modeMenu, MF_STRING, MENU_ID_MODE_LOCAL, Settings.RecognitionMode == RecognitionMode.LocalWithLlmCorrection ? "● 本地识别 + LLM 纠错" : "  本地识别 + LLM 纠错");
             AppendMenu(modeMenu, MF_STRING, MENU_ID_MODE_AI, Settings.RecognitionMode == RecognitionMode.AiTranscription ? "● AI 语音转写（API）" : "  AI 语音转写（API）");
-            AppendMenu(hMenu, 0x00000010, 0, "识别模式"); // MF_POPUP
+            AppendMenu(hMenu, MF_POPUP, 0, "识别模式"); // MF_POPUP
             AppendMenu(hMenu, MF_SEPARATOR, 0, "");
             AppendMenu(hMenu, MF_STRING, MENU_ID_SETTINGS, "设置");
             AppendMenu(hMenu, MF_SEPARATOR, 0, "");

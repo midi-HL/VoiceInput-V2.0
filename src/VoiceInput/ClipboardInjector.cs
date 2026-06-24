@@ -109,7 +109,7 @@ namespace VoiceInput
             bool clipboardOk = false;
             try
             {
-                var thread = new Thread(() =>
+                var setThread = new Thread(() =>
                 {
                     try
                     {
@@ -117,9 +117,9 @@ namespace VoiceInput
                     }
                     catch { }
                 });
-                thread.SetApartmentState(ApartmentState.STA);
-                thread.Start();
-                thread.Join(500);
+                setThread.SetApartmentState(ApartmentState.STA);
+                setThread.Start();
+                setThread.Join(500);
             }
             catch { }
 

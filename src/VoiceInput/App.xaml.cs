@@ -36,6 +36,7 @@ namespace VoiceInput
 
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            base.OnLaunched(args);
             InitializeServices();
             InitializeTrayIcon();
             InitializeKeyboardHook();

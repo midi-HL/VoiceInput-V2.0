@@ -127,6 +127,7 @@ namespace VoiceInput
             PositionAtBottomCenter();
 
             // Show window without activating
+            this.Activate();
             ShowWindow(_hwnd, SW_SHOWNOACTIVATE);
 
             // Entry animation
