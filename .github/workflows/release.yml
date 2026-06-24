@@ -40,18 +40,24 @@ jobs:
           }
         continue-on-error: true
 
-      - name: Build with verbose
-        if: "!startsWith(github.ref, 'refs/tags/v')"
+      - name: Build and capture XAML errors
         shell: pwsh
         run: |
-          dotnet publish src/VoiceInput -c Release -r win-x64 --self-contained true --no-restore -o build-verify -v detailed 2>&1 | Select-String -Pattern "XamlCompiler|error|Error|MC[0-9]|input.json|output.json" | Select-Object -First 30
-        continue-on-error: true
-
-      - name: Build verification
-        if: "!startsWith(github.ref, 'refs/tags/v')"
-        shell: cmd
-        run: |
-          "C:\Program Files\dotnet\dotnet.exe" publish src\VoiceInput -c Release -r win-x64 --self-contained true --no-restore -o build-verify
+          dotnet publish src/VoiceInput -c Release -r win-x64 --self-contained true --no-restore -o build-verify
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Build failed. Checking XAML compiler output..."
+            $outputJson = "src/VoiceInput/obj/Release/net8.0-windows10.0.19041.0/win-x64/output.json"
+            if (Test-Path $outputJson) {
+              Write-Host "=== output.json ==="
+              Get-Content $outputJson | ConvertFrom-Json | ConvertTo-Json -Depth 10
+            }
+            # Also check for any MC error files
+            Get-ChildItem "src/VoiceInput/obj" -Recurse -Filter "*.err" | ForEach-Object {
+              Write-Host "=== $($_.FullName) ==="
+              Get-Content $_.FullName
+            }
+            exit 1
+          }
 
       - name: Publish
         if: startsWith(github.ref, 'refs/tags/v')
