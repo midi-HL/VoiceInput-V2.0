@@ -40,31 +40,28 @@ jobs:
           }
         continue-on-error: true
 
-      - name: Build with full output
+      - name: Build and capture XAML errors
         shell: pwsh
         run: |
-          $output = dotnet publish src/VoiceInput -c Release -r win-x64 --self-contained true --no-restore -o build-verify 2>&1
-          $output | Out-File -FilePath build-output.txt -Encoding utf8
-          Write-Host "=== BUILD OUTPUT ==="
-          $output | Where-Object { $_ -match "error|warning|MC[0-9]|XamlCompiler|Pass|Compile|Xaml" } | ForEach-Object { Write-Host $_ }
-          Write-Host "=== END ==="
+          dotnet publish src/VoiceInput -c Release -r win-x64 --self-contained true --no-restore -o build-verify 2>&1 | Out-Null
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "Build failed with exit code $LASTEXITCODE"
-            # Try running XamlCompiler directly to get error
-            $inputJson = "src/VoiceInput/obj/Release/net8.0-windows10.0.19041.0/win-x64/input.json"
-            if (Test-Path $inputJson) {
-              Write-Host "=== input.json ==="
-              Get-Content $inputJson | ConvertFrom-Json | ConvertTo-Json -Depth 10
+            Write-Host "Build failed. Running XamlCompiler directly..."
+            $xamlCompiler = "C:\Users\runneradmin\.nuget\packages\microsoft.windowsappsdk\1.4.240802001\tools\net472\XamlCompiler.exe"
+            $inputJson = "src\VoiceInput\obj\Release\net8.0-windows10.0.19041.0\win-x64\input.json"
+            $outputJson = "src\VoiceInput\obj\Release\net8.0-windows10.0.19041.0\win-x64\output.json"
+            if (Test-Path $xamlCompiler) {
+              Write-Host "Running: $xamlCompiler $inputJson $outputJson"
+              & $xamlCompiler $inputJson $outputJson 2>&1
+              Write-Host "Exit code: $LASTEXITCODE"
+            } else {
+              Write-Host "XamlCompiler not found at: $xamlCompiler"
+            }
+            if (Test-Path $outputJson) {
+              Write-Host "=== output.json ==="
+              Get-Content $outputJson
             }
             exit 1
           }
-
-      - name: Upload build output
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: build-output.txt
 
       - name: Publish
         if: startsWith(github.ref, 'refs/tags/v')
