@@ -25,6 +25,25 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Set .NET 8 RID graph path
+        shell: pwsh
+        run: |
+          # Find .NET 8 SDK's RuntimeIdentifierGraph.json
+          $sdkPath = & dotnet --list-sdk | Where-Object { $_ -match '8\.0\.' } | Select-Object -First 1 | ForEach-Object { $_.Split()[0] }
+          $ridGraphPath = Join-Path $env:DOTNET_ROOT "sdk" $sdkPath "RuntimeIdentifierGraph.json"
+          if (Test-Path $ridGraphPath) {
+            Write-Host "Found RID graph: $ridGraphPath"
+            echo "DOTNET_RUNTIME_IDENTIFIER_GRAPH_PATH=$ridGraphPath" >> $env:GITHUB_ENV
+          } else {
+            Write-Host "RID graph not found at: $ridGraphPath"
+            # Try alternative location
+            $altPath = Join-Path $env:DOTNET_ROOT "sdk" $sdkPath "Microsoft.NETCore.App.Ref" "RuntimeIdentifierGraph.json"
+            if (Test-Path $altPath) {
+              Write-Host "Found RID graph at: $altPath"
+              echo "DOTNET_RUNTIME_IDENTIFIER_GRAPH_PATH=$altPath" >> $env:GITHUB_ENV
+            }
+          }
+
       - name: Restore
         run: dotnet restore src/VoiceInput
 
