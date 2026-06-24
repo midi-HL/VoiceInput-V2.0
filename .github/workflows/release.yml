@@ -40,22 +40,31 @@ jobs:
           }
         continue-on-error: true
 
-      - name: Build and capture XAML errors
+      - name: Build with full output
         shell: pwsh
         run: |
-          dotnet publish src/VoiceInput -c Release -r win-x64 --self-contained true --no-restore -o build-verify 2>&1
+          $output = dotnet publish src/VoiceInput -c Release -r win-x64 --self-contained true --no-restore -o build-verify 2>&1
+          $output | Out-File -FilePath build-output.txt -Encoding utf8
+          Write-Host "=== BUILD OUTPUT ==="
+          $output | Where-Object { $_ -match "error|warning|MC[0-9]|XamlCompiler|Pass|Compile|Xaml" } | ForEach-Object { Write-Host $_ }
+          Write-Host "=== END ==="
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "`n=== Searching for XAML compiler output ==="
-            Get-ChildItem -Path src/VoiceInput/obj -Recurse -Filter "output.json" | ForEach-Object {
-              Write-Host "Found: $($_.FullName)"
-              Get-Content $_.FullName | ConvertFrom-Json | ConvertTo-Json -Depth 10
-            }
-            Get-ChildItem -Path src/VoiceInput/obj -Recurse -Filter "*.err" | ForEach-Object {
-              Write-Host "Error file: $($_.FullName)"
-              Get-Content $_.FullName
+            Write-Host "Build failed with exit code $LASTEXITCODE"
+            # Try running XamlCompiler directly to get error
+            $inputJson = "src/VoiceInput/obj/Release/net8.0-windows10.0.19041.0/win-x64/input.json"
+            if (Test-Path $inputJson) {
+              Write-Host "=== input.json ==="
+              Get-Content $inputJson | ConvertFrom-Json | ConvertTo-Json -Depth 10
             }
             exit 1
           }
+
+      - name: Upload build output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: build-output.txt
 
       - name: Publish
         if: startsWith(github.ref, 'refs/tags/v')
